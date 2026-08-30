@@ -6,6 +6,6 @@ resource "aws_instance" "this" {
   vpc_security_group_ids = [var.security_group_id]
 
   tags = {
-    Name = "${var.project_name}-ec2"
+    Name = var.instance_name
   }
 }

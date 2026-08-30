@@ -15,11 +15,11 @@ variable "subnet_id" {
   description = "The ID of the subnet to launch the EC2 instance in"
   type        = string
 }
-variable "project_name" {
-  description = "The name of the project"
-  type        = string
-}
+
 variable "security_group_id" {
   description = "The ID of the security group to associate with the EC2 instance"
   type        = string
+}
+variable "instance_name" {
+  type = string
 }
