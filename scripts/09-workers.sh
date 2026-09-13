@@ -201,39 +201,23 @@ done
 # CNI plugins
 # ------------------------------------------------------------
 
-CNI_BRIDGE_PATH="$(
+CNI_ARCHIVE="$(
 	find downloads \
+		-maxdepth 1 \
 		-type f \
-		-name bridge \
+		-name 'cni-plugins-linux-amd64-*.tgz' \
 		-print \
 		-quit
 )"
 
-if [ -n "$CNI_BRIDGE_PATH" ]; then
+[ -n "$CNI_ARCHIVE" ] || die "CNI plugins archive not found"
 
-	CNI_DIR="$(dirname "$CNI_BRIDGE_PATH")"
+rm -rf "${WORK_DIR}/cni"
 
-	cp -a \
-		"${CNI_DIR}/." \
-		"${WORK_DIR}/cni/"
+mkdir -p "${WORK_DIR}/cni"
 
-else
-
-	CNI_ARCHIVE="$(
-		find downloads \
-			-maxdepth 1 \
-			-type f \
-			-name 'cni-plugins-linux-amd64-*.tgz' \
-			-print \
-			-quit
-	)"
-
-	[ -n "$CNI_ARCHIVE" ] || die "CNI plugins archive not found"
-
-	tar -xzf "$CNI_ARCHIVE" \
-		-C "${WORK_DIR}/cni"
-
-fi
+tar -xzf "$CNI_ARCHIVE" \
+	-C "${WORK_DIR}/cni"
 
 require_file "${WORK_DIR}/bin/kubelet"
 require_file "${WORK_DIR}/bin/kube-proxy"
