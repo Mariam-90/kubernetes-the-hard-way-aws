@@ -21,6 +21,8 @@ variable "availability_zone" {
 variable "instances" {
   type = map(object({
     instance_type = string
+    private_ip    = string
+    role          = string
   }))
 }
 

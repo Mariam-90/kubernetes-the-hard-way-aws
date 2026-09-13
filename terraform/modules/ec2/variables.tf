@@ -23,3 +23,14 @@ variable "security_group_id" {
 variable "instance_name" {
   type = string
 }
+
+
+variable "private_ip" {
+  type = string
+}
+
+variable "user_data" {
+  type    = string
+  default = null
+}
+
