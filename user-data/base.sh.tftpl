@@ -1,0 +1,50 @@
+#!/bin/bash
+set -euxo pipefail
+
+hostnamectl set-hostname "${hostname}"
+
+apt-get update
+
+DEBIAN_FRONTEND=noninteractive apt-get install -y \
+  curl \
+  wget \
+  git \
+  openssl \
+  vim \
+  socat \
+  conntrack \
+  ipset \
+  kmod \
+  ca-certificates
+
+cat > /etc/hosts <<'EOF'
+127.0.0.1 localhost
+
+10.0.1.20 server.kubernetes.local server
+10.0.1.30 node-0.kubernetes.local node-0
+10.0.1.40 node-1.kubernetes.local node-1
+EOF
+
+if [ "${role}" = "worker" ]; then
+  swapoff -a || true
+
+  modprobe br-netfilter
+
+  echo "br-netfilter" > /etc/modules-load.d/kubernetes.conf
+
+  cat > /etc/sysctl.d/kubernetes.conf <<'EOF'
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+
+  sysctl --system
+
+  mkdir -p \
+    /etc/cni/net.d \
+    /opt/cni/bin \
+    /etc/containerd \
+    /var/lib/kubelet \
+    /var/lib/kube-proxy
+fi
+
+touch /var/log/kthw-user-data-complete
