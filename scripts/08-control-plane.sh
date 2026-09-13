@@ -12,17 +12,17 @@ cd "${REPO_DIR}"
 log "Copying control-plane binaries and configs"
 
 scp \
-  downloads/kube-apiserver \
-  downloads/kube-controller-manager \
-  downloads/kube-scheduler \
-  downloads/kubectl \
-  units/kube-apiserver.service \
-  units/kube-controller-manager.service \
-  units/kube-scheduler.service \
-  configs/kube-scheduler.yaml \
-  configs/kube-apiserver-to-kubelet.yaml \
-  admin@server:/tmp/
-  
+	downloads/kube-apiserver \
+	downloads/kube-controller-manager \
+	downloads/kube-scheduler \
+	downloads/kubectl \
+	units/kube-apiserver.service \
+	units/kube-controller-manager.service \
+	units/kube-scheduler.service \
+	configs/kube-scheduler.yaml \
+	configs/kube-apiserver-to-kubelet.yaml \
+	admin@server:/tmp/
+
 log "Installing control plane"
 
 ssh admin@server bash <<'REMOTE'
@@ -93,12 +93,42 @@ for service in kube-apiserver kube-controller-manager kube-scheduler; do
 
 done
 
+echo "Waiting for kube-apiserver readiness"
+
+for i in {1..30}; do
+  if kubectl get --raw='/readyz' \
+    --kubeconfig /home/admin/admin.kubeconfig \
+    >/dev/null 2>&1; then
+
+    echo "kube-apiserver is ready"
+    break
+  fi
+
+  sleep 2
+done
+
+if ! kubectl get --raw='/readyz' \
+  --kubeconfig /home/admin/admin.kubeconfig \
+  >/dev/null 2>&1; then
+
+  echo "ERROR: kube-apiserver did not become ready"
+
+  sudo journalctl \
+    -u kube-apiserver \
+    -n 100 \
+    --no-pager
+
+  exit 1
+fi
+
 kubectl cluster-info \
   --kubeconfig /home/admin/admin.kubeconfig
 
 kubectl apply \
   -f /tmp/kube-apiserver-to-kubelet.yaml \
   --kubeconfig /home/admin/admin.kubeconfig
+
+
 
 REMOTE
 
